@@ -116,3 +116,9 @@ curl http://localhost:8899/openapi.yaml
 ```
 
 Import that URL into Swagger UI/Editor, or import `docs/openapi.yaml` directly from this repository. Keeping the spec in Git makes API review diffable in pull requests.
+
+## Website
+
+Browse a friendly API catalog, setup flow, and quick-start guide at GitHub Pages after enabling **Settings → Pages → Source: GitHub Actions**:
+
+`https://mrnim94.github.io/fb-cookie-bridge/`
