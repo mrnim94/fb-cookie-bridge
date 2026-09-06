@@ -41,3 +41,9 @@ def test_openapi_contract_is_present():
     text = spec.read_text()
     assert "openapi: 3.1.0" in text
     assert "/v1/facebook/request:" in text
+
+
+def test_runtime_openapi_path_matches_docker_layout():
+    module = Path(__file__).parents[1] / "src" / "fb_cookie_bridge" / "http.py"
+    expected = module.parents[2] / "docs" / "openapi.yaml"
+    assert expected.is_file()

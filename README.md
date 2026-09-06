@@ -41,6 +41,11 @@ curl -X POST http://localhost:8899/v1/facebook/request \
   }'
 ```
 
+## Cookie setup and integrations
+
+- [J2TEAM Cookie setup and Docker mount](docs/j2team-cookie-setup.md)
+- [n8n, cURL, and custom-app integration guide](docs/integrations.md)
+
 ## API
 
 ### `GET /healthz`
