@@ -203,12 +203,52 @@
     .section-desc { font-size: 16px; color: var(--muted); max-width: 680px; margin-bottom: 32px; }
 
     /* API Endpoint Cards */
-    .endpoint-card {
+    
+    details.endpoint-card {
       background: var(--panel);
       border: 1px solid var(--card-border);
       border-radius: 14px;
-      margin-bottom: 20px;
+      margin-bottom: 16px;
       overflow: hidden;
+      transition: border-color 0.2s;
+    }
+    details.endpoint-card:hover {
+      border-color: var(--brand-glow);
+    }
+    details.endpoint-card summary.endpoint-bar {
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(255,255,255,0.02);
+      cursor: pointer;
+      list-style: none;
+      user-select: none;
+    }
+    details.endpoint-card summary::-webkit-details-marker {
+      display: none;
+    }
+    details.endpoint-card summary::marker {
+      display: none;
+    }
+    details.endpoint-card[open] summary.endpoint-bar {
+      border-bottom: 1px solid var(--line);
+      background: rgba(255,255,255,0.04);
+    }
+    .endpoint-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .chevron-icon {
+      width: 18px;
+      height: 18px;
+      transition: transform 0.25s ease;
+      color: var(--muted);
+    }
+    details.endpoint-card[open] .chevron-icon {
+      transform: rotate(180deg);
+      color: #60a5fa;
     }
     .endpoint-bar {
       padding: 16px 20px;
@@ -360,14 +400,14 @@
       <p class="section-desc">Straightforward endpoints for n8n, Python, or curl. High performance, zero Playwright overhead.</p>
 
       <!-- Endpoint 1: Get Pending Posts -->
-      <div class="endpoint-card">
-        <div class="endpoint-bar">
+      <details class="endpoint-card" open>
+        <summary class="endpoint-bar">
           <div class="endpoint-left">
             <span class="method-tag method-get">GET</span>
             <span class="endpoint-path">/v1/groups/{group_id}/pending-posts</span>
           </div>
-          <div class="endpoint-desc">Fetch all pending posts with GraphQL pagination loop</div>
-        </div>
+          <div class="endpoint-right"><span class="endpoint-desc">Fetch all pending posts with GraphQL pagination loop</span><svg class="chevron-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/></svg></div>
+        </summary>
         <div class="endpoint-body">
           <div class="code-col">
             <div class="code-title">cURL Request</div>
@@ -392,18 +432,18 @@
   ]
 }</pre>
           </div>
-        </div>
+        </details>
       </div>
 
       <!-- Endpoint 2: Approve Post -->
-      <div class="endpoint-card">
-        <div class="endpoint-bar">
+      <details class="endpoint-card">
+        <summary class="endpoint-bar">
           <div class="endpoint-left">
             <span class="method-tag method-post">POST</span>
             <span class="endpoint-path">/v1/groups/{group_id}/pending-posts/{story_id}:approve</span>
           </div>
-          <div class="endpoint-desc">Approve pending post into the group feed</div>
-        </div>
+          <div class="endpoint-right"><span class="endpoint-desc">Approve pending post into the group feed</span><svg class="chevron-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/></svg></div>
+        </summary>
         <div class="endpoint-body">
           <div class="code-col">
             <div class="code-title">cURL Request</div>
@@ -419,18 +459,18 @@
   "confirmed": true
 }</pre>
           </div>
-        </div>
+        </details>
       </div>
 
       <!-- Endpoint 3: Decline Post -->
-      <div class="endpoint-card">
-        <div class="endpoint-bar">
+      <details class="endpoint-card">
+        <summary class="endpoint-bar">
           <div class="endpoint-left">
             <span class="method-tag method-post">POST</span>
             <span class="endpoint-path">/v1/groups/{group_id}/pending-posts/{story_id}:decline</span>
           </div>
-          <div class="endpoint-desc">Decline and remove pending post</div>
-        </div>
+          <div class="endpoint-right"><span class="endpoint-desc">Decline and remove pending post</span><svg class="chevron-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/></svg></div>
+        </summary>
         <div class="endpoint-body">
           <div class="code-col">
             <div class="code-title">cURL Request</div>
@@ -446,18 +486,18 @@
   "confirmed": true
 }</pre>
           </div>
-        </div>
+        </details>
       </div>
 
       <!-- Endpoint 4: Generic Raw Request -->
-      <div class="endpoint-card">
-        <div class="endpoint-bar">
+      <details class="endpoint-card">
+        <summary class="endpoint-bar">
           <div class="endpoint-left">
             <span class="method-tag method-post">POST</span>
             <span class="endpoint-path">/v1/facebook/request</span>
           </div>
-          <div class="endpoint-desc">Low-level raw HTTPS request with mounted session cookies</div>
-        </div>
+          <div class="endpoint-right"><span class="endpoint-desc">Low-level raw HTTPS request with mounted session cookies</span><svg class="chevron-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/></svg></div>
+        </summary>
         <div class="endpoint-body">
           <div class="code-col">
             <div class="code-title">cURL Request</div>
@@ -477,7 +517,7 @@
   "body": "<!DOCTYPE html>..."
 }</pre>
           </div>
-        </div>
+        </details>
       </div>
     </section>
 
