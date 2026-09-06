@@ -95,3 +95,19 @@ Run on a private network. Mount cookie files read-only. Keep a network policy in
 ## License
 
 MIT.
+
+## What works today
+
+See [capability matrix](docs/capabilities.md). v0.1 is a small transport product, not an all-in-one Facebook automation suite: it can make safe, allowlisted Facebook HTTPS calls with an operator-mounted cookie. Group queue reading and moderation are intentionally **not** public endpoints yet.
+
+## OpenAPI / Swagger-compatible contract
+
+The API contract is [OpenAPI 3.1](docs/openapi.yaml). It works with Swagger UI, Redoc, Scalar, Postman, Insomnia, and API gateways.
+
+When container is running, use the live contract:
+
+```bash
+curl http://localhost:8899/openapi.yaml
+```
+
+Import that URL into Swagger UI/Editor, or import `docs/openapi.yaml` directly from this repository. Keeping the spec in Git makes API review diffable in pull requests.

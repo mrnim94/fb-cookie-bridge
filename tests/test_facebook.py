@@ -34,3 +34,10 @@ def test_accepts_allowed_facebook_targets(method: str, url: str):
 def test_rejects_unsafe_target(method: str, url: str, error: str):
     with pytest.raises(RequestError, match=error):
         validate_target(method, url)
+
+
+def test_openapi_contract_is_present():
+    spec = Path(__file__).parents[1] / "docs" / "openapi.yaml"
+    text = spec.read_text()
+    assert "openapi: 3.1.0" in text
+    assert "/v1/facebook/request:" in text

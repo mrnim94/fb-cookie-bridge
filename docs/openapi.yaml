@@ -1,0 +1,79 @@
+openapi: 3.1.0
+info:
+  title: FB Cookie Bridge API
+  version: 0.1.0
+  description: |
+    Private-network HTTP bridge for Facebook requests authenticated with an
+    operator-mounted cookie file. The bridge never accepts cookie values over HTTP.
+servers:
+  - url: http://localhost:8899
+paths:
+  /healthz:
+    get:
+      summary: Liveness endpoint
+      operationId: healthz
+      responses:
+        '200':
+          description: Service is running.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [status]
+                properties:
+                  status: {type: string, const: ok}
+  /v1/facebook/request:
+    post:
+      summary: Send an allowlisted Facebook HTTPS request with mounted cookies
+      operationId: facebookRequest
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FacebookRequest'
+      responses:
+        '200':
+          description: Upstream response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FacebookResponse'
+        '400':
+          $ref: '#/components/responses/RejectedRequest'
+        '502':
+          description: Upstream transport failed.
+components:
+  schemas:
+    FacebookRequest:
+      type: object
+      additionalProperties: false
+      required: [method, url]
+      properties:
+        method: {type: string, enum: [GET, POST, HEAD], example: GET}
+        url: {type: string, format: uri, example: https://www.facebook.com/}
+        headers:
+          type: object
+          additionalProperties: {type: string}
+          example: {accept: text/html}
+        body: {type: string, description: Optional raw upstream request body.}
+    FacebookResponse:
+      type: object
+      required: [status, headers, body]
+      properties:
+        status: {type: integer, example: 200}
+        headers:
+          type: object
+          additionalProperties: {type: string}
+        body: {type: string}
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error: {type: string, example: url_not_allowed}
+  responses:
+    RejectedRequest:
+      description: Request violates method, URL, or payload boundary.
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/Error'}

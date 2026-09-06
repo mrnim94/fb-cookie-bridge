@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import logging
+from pathlib import Path
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 from .config import Settings
@@ -27,6 +28,18 @@ class Handler(BaseHTTPRequestHandler):
     def do_GET(self) -> None:
         if self.path == "/healthz":
             self._reply(200, {"status": "ok"})
+        elif self.path == "/openapi.yaml":
+            spec = Path(__file__).parents[2] / "docs" / "openapi.yaml"
+            try:
+                body = spec.read_bytes()
+            except FileNotFoundError:
+                self._reply(404, {"error": "openapi_not_installed"})
+                return
+            self.send_response(200)
+            self.send_header("Content-Type", "application/yaml")
+            self.send_header("Content-Length", str(len(body)))
+            self.end_headers()
+            self.wfile.write(body)
         else:
             self._reply(404, {"error": "not_found"})
 
