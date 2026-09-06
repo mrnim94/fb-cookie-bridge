@@ -29,7 +29,7 @@ class Handler(BaseHTTPRequestHandler):
         if self.path == "/healthz":
             self._reply(200, {"status": "ok"})
         elif self.path == "/openapi.yaml":
-            spec = Path(__file__).parents[2] / "docs" / "openapi.yaml"
+            spec = Path(__file__).parents[3] / "docs" / "openapi.yaml"
             try:
                 body = spec.read_bytes()
             except FileNotFoundError:
