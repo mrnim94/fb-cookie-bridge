@@ -1,124 +1,58 @@
 # fb-cookie-bridge
 
-Small HTTP bridge for Facebook requests authenticated by operator-owned cookie exports. Built on [`curl_cffi`](https://github.com/lexiforest/curl_cffi) browser impersonation.
+HTTP bridge for Facebook Group moderation and automation workflows. Authenticated using operator-mounted [J2TEAM Cookies](docs/j2team-cookie-setup.md) with [`curl_cffi`](https://github.com/lexiforest/curl_cffi) browser impersonation.
 
-> Use only with Facebook accounts and groups you own or administer. Cookies are credentials: never commit them, send them through request payloads, or expose this service publicly.
+Live Documentation & Interactive API Showcase:
+👉 **[https://mrnim94.github.io/fb-cookie-bridge/](https://mrnim94.github.io/fb-cookie-bridge/)**
 
-## Why
+---
 
-Workflow engines such as n8n need a narrow, repeatable interface. This service owns only transport concerns:
+## Features
 
-- Loads a read-only Facebook cookie export from disk.
-- Uses `curl_cffi` browser impersonation for HTTPS requests.
-- Enforces HTTPS, Facebook host allowlist, and `GET`/`POST`/`HEAD` only.
-- Emits structured logs without cookie values or request bodies.
+- **Facebook Group Moderation REST APIs**:
+  - `GET /v1/groups/{group_id}/pending-posts`: Crawls and paginates through pending posts using Comet GraphQL.
+  - `POST /v1/groups/{group_id}/pending-posts/{story_id}:approve`: Approves story to the group feed.
+  - `POST /v1/groups/{group_id}/pending-posts/{story_id}:decline`: Rejects and removes spam story.
+- **Low-level Bridge**:
+  - `POST /v1/facebook/request`: Secure transport for arbitrary Facebook HTTPS requests with auto-attached session.
+- **Zero Headless Overhead**: Ultra lightweight C/Python runtime using `curl_cffi` (~20MB RAM vs 1GB+ with Chrome/Playwright).
+- **Security First**: Cookies are mounted read-only from the host; credentials are never passed over the wire.
 
-Business workflows, GraphQL queries, and moderation policies stay outside this repository.
+## Quick Start
 
-## Quick start
-
-```bash
-cp examples/cookies.example.json cookies_fb.json
-# Replace placeholders with a cookie export from an account you operate.
-docker compose up --build
-```
-
-Health check:
+1. Export Facebook cookies from your browser session using J2TEAM Cookies into `cookies_fb.json`.
+2. Start the bridge container:
 
 ```bash
-curl http://localhost:8899/healthz
+docker compose up -d --build
 ```
 
-Request bridge:
+3. Fetch all pending posts in your Facebook group:
 
 ```bash
-curl -X POST http://localhost:8899/v1/facebook/request \
-  -H 'content-type: application/json' \
-  -d '{
-    "method":"GET",
-    "url":"https://www.facebook.com/",
-    "headers":{"accept":"text/html"}
-  }'
+curl -s http://localhost:8899/v1/groups/1263207130787754/pending-posts
 ```
 
-## Cookie setup and integrations
-
-- [J2TEAM Cookie setup and Docker mount](docs/j2team-cookie-setup.md)
-- [n8n, cURL, and custom-app integration guide](docs/integrations.md)
-
-## API
-
-### `GET /healthz`
-
-Returns `{"status":"ok"}`.
-
-### `POST /v1/facebook/request`
-
-```json
-{
-  "method": "GET | POST | HEAD",
-  "url": "https://www.facebook.com/...",
-  "headers": {"accept": "application/json"},
-  "body": "optional raw request body"
-}
-```
-
-Allowed hosts: `facebook.com`, `www.facebook.com`, `m.facebook.com`, `graph.facebook.com`. The bridge rejects cookies supplied by callers, non-HTTPS URLs, redirects outside caller control, and unsafe HTTP methods.
-
-## Configuration
-
-| Variable | Default | Meaning |
-|---|---|---|
-| `FBCB_COOKIE_FILE` | `/run/secrets/facebook_cookies.json` | Cookie JSON path |
-| `FBCB_HOST` | `0.0.0.0` | Bind address |
-| `FBCB_PORT` | `8899` | Listen port |
-| `FBCB_IMPERSONATE` | `chrome` | `curl_cffi` browser profile |
-| `FBCB_TIMEOUT_SECONDS` | `30` | Upstream timeout |
-
-## Development
+4. Approve or decline a pending post:
 
 ```bash
-python -m venv .venv
-. .venv/bin/activate
-pip install -e . pytest
-pytest
+# Approve
+curl -X POST http://localhost:8899/v1/groups/1263207130787754/pending-posts/UzpfSTEwMDA...:approve \
+  -H 'Content-Type: application/json'
+
+# Decline
+curl -X POST http://localhost:8899/v1/groups/1263207130787754/pending-posts/UzpfSTEwMDA...:decline \
+  -H 'Content-Type: application/json'
 ```
 
-## Layout
+## Documentation
 
-```text
-src/fb_cookie_bridge/  # config, transport boundary, HTTP server
-examples/              # credential-free example only
-tests/                 # trust-boundary unit tests
-.github/workflows/     # test and image-build CI
-```
-
-## Security model
-
-Run on a private network. Mount cookie files read-only. Keep a network policy in front of this bridge. The API deliberately does not implement arbitrary proxying, credential ingestion, browser automation, or Facebook business actions.
+- [Interactive Web Docs](https://mrnim94.github.io/fb-cookie-bridge/)
+- [OpenAPI 3.1 Contract](docs/openapi.yaml)
+- [J2TEAM Cookie Setup & Mount](docs/j2team-cookie-setup.md)
+- [n8n Workflow Integration Guide](docs/integrations.md)
+- [Capability Matrix](docs/capabilities.md)
 
 ## License
 
 MIT.
-
-## What works today
-
-See [capability matrix](docs/capabilities.md). v0.1 is a small transport product, not an all-in-one Facebook automation suite: it can make safe, allowlisted Facebook HTTPS calls with an operator-mounted cookie. Group queue reading and moderation are intentionally **not** public endpoints yet.
-
-## OpenAPI / Swagger-compatible contract
-
-The API contract is [OpenAPI 3.1](docs/openapi.yaml). It works with Swagger UI, Redoc, Scalar, Postman, Insomnia, and API gateways.
-
-When container is running, use the live contract:
-
-```bash
-curl http://localhost:8899/openapi.yaml
-```
-
-Import that URL into Swagger UI/Editor, or import `docs/openapi.yaml` directly from this repository. Keeping the spec in Git makes API review diffable in pull requests.
-
-## Website
-
-Browse a friendly API catalog, setup flow, and quick-start guide at GitHub Pages after enabling **Settings → Pages → Source: GitHub Actions**:
-
-`https://mrnim94.github.io/fb-cookie-bridge/`

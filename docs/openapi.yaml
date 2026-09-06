@@ -1,30 +1,113 @@
 openapi: 3.1.0
 info:
   title: FB Cookie Bridge API
-  version: 0.1.0
+  version: 0.2.0
   description: |
-    Private-network HTTP bridge for Facebook requests authenticated with an
-    operator-mounted cookie file. The bridge never accepts cookie values over HTTP.
+    Production-grade HTTP bridge for Facebook Group automations and raw requests
+    authenticated via operator-mounted J2TEAM cookies with curl_cffi browser impersonation.
 servers:
   - url: http://localhost:8899
 paths:
   /healthz:
     get:
-      summary: Liveness endpoint
+      summary: Liveness check
       operationId: healthz
       responses:
         '200':
-          description: Service is running.
+          description: Service running
           content:
             application/json:
               schema:
                 type: object
-                required: [status]
                 properties:
-                  status: {type: string, const: ok}
+                  status: {type: string, example: ok}
+
+  /v1/groups/{group_id}/pending-posts:
+    get:
+      summary: Get all pending posts in a Facebook Group
+      operationId: getPendingPosts
+      parameters:
+        - name: group_id
+          in: path
+          required: true
+          schema: {type: string}
+          description: Facebook Group numeric ID (e.g. 1263207130787754)
+      responses:
+        '200':
+          description: List of pending posts with metadata, author, text and images
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: {type: string, example: ok}
+                  groupId: {type: string, example: "1263207130787754"}
+                  count: {type: integer, example: 5}
+                  posts:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/PendingPost'
+
+  /v1/groups/{group_id}/pending-posts/{story_id}:approve:
+    post:
+      summary: Approve a pending post into the group feed
+      operationId: approvePendingPost
+      parameters:
+        - name: group_id
+          in: path
+          required: true
+          schema: {type: string}
+        - name: story_id
+          in: path
+          required: true
+          schema: {type: string}
+          description: Relay story node ID (Uzpf...) or raw post ID
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                authorId: {type: string, description: Optional Facebook author ID}
+      responses:
+        '200':
+          description: Moderation confirmation from Facebook Comet GraphQL
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ModerationResponse'
+
+  /v1/groups/{group_id}/pending-posts/{story_id}:decline:
+    post:
+      summary: Decline and remove a pending post
+      operationId: declinePendingPost
+      parameters:
+        - name: group_id
+          in: path
+          required: true
+          schema: {type: string}
+        - name: story_id
+          in: path
+          required: true
+          schema: {type: string}
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                authorId: {type: string, description: Optional Facebook author ID}
+      responses:
+        '200':
+          description: Moderation confirmation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ModerationResponse'
+
   /v1/facebook/request:
     post:
-      summary: Send an allowlisted Facebook HTTPS request with mounted cookies
+      summary: Low-level generic Facebook HTTPS request with mounted cookies
       operationId: facebookRequest
       requestBody:
         required: true
@@ -34,46 +117,52 @@ paths:
               $ref: '#/components/schemas/FacebookRequest'
       responses:
         '200':
-          description: Upstream response.
+          description: Upstream response
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/FacebookResponse'
-        '400':
-          $ref: '#/components/responses/RejectedRequest'
-        '502':
-          description: Upstream transport failed.
+
 components:
   schemas:
+    PendingPost:
+      type: object
+      properties:
+        groupId: {type: string, example: "1263207130787754"}
+        postId: {type: string, example: "2582181942223593"}
+        nodeId: {type: string, example: "UzpfSTEwMDA4MDkzNjc0MjQ4NjpWSzoyNTkxMjQ2NTcxMzE3MTMw"}
+        postUrl: {type: string, example: "https://www.facebook.com/groups/1263207130787754/pending_posts/"}
+        author: {type: string, example: "Đạt Trần"}
+        authorId: {type: string, example: "100080936742486"}
+        content: {type: string, example: "🚀 Tuyển dụng DevOps Lead (Domain Banking)..."}
+        images:
+          type: array
+          items: {type: string}
+        creationTime: {type: integer, example: 1725512345}
+
+    ModerationResponse:
+      type: object
+      properties:
+        status: {type: string, example: ok}
+        action: {type: string, example: APPROVE}
+        confirmed: {type: boolean, example: true}
+        error: {type: string, example: missing_mutation_confirmation}
+        error_codes:
+          type: array
+          items: {type: string}
+
     FacebookRequest:
       type: object
-      additionalProperties: false
       required: [method, url]
       properties:
-        method: {type: string, enum: [GET, POST, HEAD], example: GET}
-        url: {type: string, format: uri, example: https://www.facebook.com/}
-        headers:
-          type: object
-          additionalProperties: {type: string}
-          example: {accept: text/html}
-        body: {type: string, description: Optional raw upstream request body.}
+        method: {type: string, enum: [GET, POST, HEAD]}
+        url: {type: string, format: uri}
+        headers: {type: object, additionalProperties: {type: string}}
+        body: {type: string}
+
     FacebookResponse:
       type: object
-      required: [status, headers, body]
       properties:
         status: {type: integer, example: 200}
-        headers:
-          type: object
-          additionalProperties: {type: string}
+        headers: {type: object, additionalProperties: {type: string}}
         body: {type: string}
-    Error:
-      type: object
-      required: [error]
-      properties:
-        error: {type: string, example: url_not_allowed}
-  responses:
-    RejectedRequest:
-      description: Request violates method, URL, or payload boundary.
-      content:
-        application/json:
-          schema: {$ref: '#/components/schemas/Error'}
