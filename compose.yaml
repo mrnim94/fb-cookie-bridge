@@ -1,0 +1,12 @@
+services:
+  fb-cookie-bridge:
+    build: .
+    image: ghcr.io/mrnim94/fb-cookie-bridge:local
+    ports: ["8899:8899"]
+    environment:
+      FBCB_IMPERSONATE: chrome
+    volumes:
+      - ./cookies_fb.json:/run/secrets/facebook_cookies.json:ro
+    read_only: true
+    tmpfs: [/tmp]
+    security_opt: [no-new-privileges:true]

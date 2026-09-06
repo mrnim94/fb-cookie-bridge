@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "fb-cookie-bridge"
+version = "0.1.0"
+description = "Small HTTP bridge for Facebook requests authenticated with operator-owned cookies"
+readme = "README.md"
+requires-python = ">=3.11"
+license = {text = "MIT"}
+authors = [{name = "Nim"}]
+dependencies = ["curl_cffi>=0.13,<0.15"]
+
+[project.scripts]
+fb-cookie-bridge = "fb_cookie_bridge.__main__:main"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+
+[tool.ruff]
+line-length = 100
