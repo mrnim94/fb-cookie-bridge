@@ -7,6 +7,7 @@ from pathlib import Path
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 from .config import Settings
+from .cookie_ui import cookie_upload_ui, handle_cookie_upload, handle_cookie_status
 from .facebook import FacebookClient, RequestError
 from .groups import GroupsService
 
@@ -32,6 +33,20 @@ class Handler(BaseHTTPRequestHandler):
     def do_GET(self) -> None:
         if self.path == "/healthz":
             self._reply(200, {"status": "ok"})
+            return
+
+        if self.path == "/cookie":
+            body = cookie_upload_ui()
+            self.send_response(200)
+            self.send_header("Content-Type", "text/html; charset=utf-8")
+            self.send_header("Content-Length", str(len(body)))
+            self.end_headers()
+            self.wfile.write(body)
+            return
+
+        if self.path == "/v1/cookie/status":
+            status_code, data = handle_cookie_status(self.settings.cookie_file)
+            self._reply(status_code, data)
             return
 
         if self.path == "/openapi.yaml":
@@ -63,6 +78,18 @@ class Handler(BaseHTTPRequestHandler):
         self._reply(404, {"error": "not_found"})
 
     def do_POST(self) -> None:
+        # 0. POST /v1/cookie/upload
+        if self.path == "/v1/cookie/upload":
+            try:
+                length = int(self.headers.get("Content-Length", "0"))
+                body = self.rfile.read(length)
+                status_code, data = handle_cookie_upload(body, self.settings.cookie_file)
+                self._reply(status_code, data)
+            except Exception:
+                LOG.exception("cookie_upload_failed")
+                self._reply(500, {"error": "upload_failed"})
+            return
+
         # 1. POST /v1/facebook/request
         if self.path == "/v1/facebook/request":
             try:
